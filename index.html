@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Data To Salesforce</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        let accessToken="";
+        let instanceurl="";
+
+    function authenticate(){
+            const url="https://login.salesforce.com/services/oauth2/authorize?"+
+            "response_type=token&"+
+            "client_id=3MVG9wt4IL4O5wvIrDAEJFQDJvOUtmP22fMq2Umv7UnSKECVwy3N.9BdK04ZAR9u97vuIQVK7RAVMagX9msla&"+
+            "redirect_uri=https://www.google.com/";
+                
+                window.location.href=url; //used to extract current url from webpage
+        }
+
+        function pareseReturendHash(){
+            const hash=window.location.hash.substring(1);
+        //The window.location.hash returns a string that contains a # along with the
+        //fragment identifier of the URL. The fragment identifier of 
+        //the URL starts with a # followed by an identifier that uniquely identifies a section in an HTML document.
+            const params=new URLSearchParams(hash);
+            accessToken=params.get("access_token");
+            instanceurl=params.get("instance_url");
+
+        }
+
+        function sendDataToSalesforce(){
+            const accountName=document.getElementById("accountName").value;
+            const accountIndustry=document.getElementById("accountIndustry").value;
+            if(accessToken && instanceurl){
+                fetch(instanceurl+"/services/data/v53.0/sobjects/Account",{
+                    method:"POST",
+                    headers:{
+                        "Authorization": "Bearer " + accessToken,
+                        "Content-Type":"application/json"
+                    },
+                    body:JSON.stringify({
+                        Name:accountName,
+                        Industry:accountIndustry
+                    })
+                })
+                .then(response=>response.json())
+                .then(data=>{
+                    console.log(data);
+                    alert('Account Sent To Salesforce '+accountName)
+                })
+                .catch(error=>{
+                    console.error("error Sending data to Salesforce",error);
+
+                });
+             
+            }
+            else{
+                alert("not Authiticated With Salesforce")
+            }
+        }
+
+        window.onload=()=>{
+            pareseReturendHash();
+        }
+
+    </script>
+</head>
+<body>
+    <h1>Salesforce Account Form</h1>
+    <button onclick="authenticate()">Authenticate With Salesforce</button>
+    <br><br>
+    <input id="accountName" placeholder="Account Name Here" type="text"> 
+    <input id="accountIndustry" placeholder="Account Industry Here" type="text">
+    <button onclick="sendDataToSalesforce()">Create Account In Salesforce</button>
+</body>
+</html>
